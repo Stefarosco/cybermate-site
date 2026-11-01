@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>网站安全配置体检 · 可复核的响应头报告</title>
+<style>
+  :root{
+    --ink:#14161a; --muted:#5b6371; --line:#e6e8ec; --bg:#ffffff;
+    --accent:#1f6feb; --accent-soft:#eef4ff; --ok:#0f8a4d; --warn:#b25b00;
+    --mono:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:56px 24px 80px}
+  .eyebrow{font-size:13px;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;font-weight:600}
+  h1{font-size:34px;line-height:1.25;margin:14px 0 12px;letter-spacing:-.01em}
+  .lead{font-size:18px;color:var(--muted);margin:0 0 28px}
+  h2{font-size:20px;margin:44px 0 14px;padding-top:20px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 8px}
+  p{margin:10px 0}
+  ul{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  code{font-family:var(--mono);font-size:.9em;background:#f4f5f7;padding:1px 5px;border-radius:4px}
+  pre{background:#0f1115;color:#e7eaf0;padding:14px 16px;border-radius:8px;overflow:auto;
+      font-family:var(--mono);font-size:13px;line-height:1.55}
+  pre .c{color:#8b93a3}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:15px}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+  th{background:#fafbfc;font-weight:600;white-space:nowrap}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:18px 0}
+  .card{border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .card h3{margin:0 0 6px;font-size:16px}
+  .card p{margin:0;color:var(--muted);font-size:14.5px}
+  .tag{display:inline-block;font-size:12.5px;padding:2px 9px;border-radius:999px;
+       background:var(--accent-soft);color:var(--accent);font-weight:600;margin-right:6px}
+  .tag.no{background:#fff2e8;color:var(--warn)}
+  .note{border-left:3px solid var(--accent);background:#f8faff;padding:12px 16px;color:var(--ink);border-radius:0 6px 6px 0}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+  .btn{display:inline-block;padding:11px 18px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{border:1px solid var(--line);color:var(--ink)}
+  .fine{color:var(--muted);font-size:13.5px;margin-top:14px}
+  footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">网站安全配置体检</div>
+  <h1>你的网站该配的安全项，<br>配了没有、配对没有、改完怎么验证</h1>
+  <p class="lead">把你网站的响应抓下来，逐条告诉你：哪条配置会让用户承担风险、该谁改、改成什么、敲哪条命令能证明改好了。不攻击、不猜、不下「有漏洞」的结论。</p>
+
+  <div class="cta">
+    <a class="btn primary" href="./样例交付件.pdf" target="_blank" rel="noopener">看一份样例交付件（PDF）</a>
+    <a class="btn ghost" href="#scope">它明确不做什么</a>
+  </div>
+
+  <h2>它解决的是哪种麻烦</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>「我这站安全吗？」</h3>
+      <p>客户问这句话时，凭感觉答没用。这份报告每条都带证据原文，客户可以自己抽查。</p>
+    </div>
+    <div class="card">
+      <h3>「改完了，好了吗？」</h3>
+      <p>每条都附一条可直接复制执行的验证命令，改完敲一遍就有答案。</p>
+    </div>
+    <div class="card">
+      <h3>「钱花在哪了？」</h3>
+      <p>按「现在就要动手 / 可选加固 / 有空再修 / 可以忽略」分四节，先修哪条一目了然。</p>
+    </div>
+  </div>
+
+  <h2 id="sample">输出长什么样（真实运行结果，未改写）</h2>
+  <pre><span class="c"># 一行结论：先告诉你总体规模（下面是本页那份样例 PDF 的原句）</span>
+3 份报文共 35 条信号：2 条要立刻处理、14 条尽快修、
+8 条可选加固、9 条加固建议（有空再修）、2 条可忽略。
+
+<span class="c"># 工具在 25 份真实站点的全量语料上跑出 190 条；样例只截 3 份，
+# 否则 24 页会变成 140 页，客户看不完。</span>
+
+<span class="c"># 然后是行动表：谁改 / 改什么 / 怎么验证 / 不改会怎样</span>
+| 问题                   | 谁改 | 命中 | 怎么验证（节选）              |
+| cookie.missing-secure  | 后端 | 12   | grep -i secure               |
+| sensitive-param-in-url | 前端 | 3    | grep -oE '(sid|token)=[^&]*' |
+| cookie.missing-httponly| 后端 | 18   | grep -i httponly             |</pre>
+
+  <p class="note"><strong>「怎么验证」那一列是这份报告最值钱的地方</strong>——它把「我觉得修好了」变成「我敲了一遍，有输出」。</p>
+
+  <h2>三种交付形态</h2>
+  <table>
+    <tr><th>形态</th><th>你给什么</th><th>你拿到什么</th></tr>
+    <tr><td>A · 单站体检</td><td>浏览器导出的 1 个 <code>.har</code></td><td>PDF 报告（本样例 26 页；站点越大页数越多）+ 一页行动清单</td></tr>
+    <tr><td>B · 多站／多环境</td><td>3–5 个站，或生产 + 预发</td><td>每站一份 + 一份汇总</td></tr>
+    <tr><td>C · 整改复检</td><td>改完后重抓一次</td><td>差异报告：哪几条消失了、哪几条还在</td></tr>
+  </table>
+
+  <h2 id="scope">它明确<strong>不</strong>做的事</h2>
+  <table>
+    <tr><th>不做</th><th>为什么</th></tr>
+    <tr><td><span class="tag no">不</span>下「存在漏洞」的结论</td><td>缺一个响应头不等于能被攻破。报告只写「配置与最佳实践不符 + 证据」。</td></tr>
+    <tr><td><span class="tag no">不</span>主动发请求、不扫描</td><td>只读你给的那个文件。不给文件，它什么都不做。</td></tr>
+    <tr><td><span class="tag no">不</span>猜证据</td><td>拿不到原文就不报，宁可漏报。每条结论的证据都必须是输入里的原样子串。</td></tr>
+    <tr><td><span class="tag no">不</span>判断业务逻辑漏洞</td><td>越权、支付逻辑、SQL 注入这些它完全不做。</td></tr>
+    <tr><td><span class="tag no">不</span>替代渗透测试</td><td>这是「配置体检」，不是「攻击验证」。要后者得单独做。</td></tr>
+  </table>
+
+  <h2>交付流程</h2>
+  <ol>
+    <li>你导出 <code>.har</code>（浏览器 F12 → 网络 → 导出 HAR）</li>
+    <li>我跑报告、转 PDF，<strong>遮掉所有 Cookie 与凭据的值</strong>（名字与属性保留，不影响任何结论）</li>
+    <li>邮件正文只写最该先改的 3 条——其余在附件里</li>
+    <li>你改完重抓一次，我出差异报告：还差几条</li>
+  </ol>
+
+  <h2>这份工具自己靠什么可信</h2>
+  <ul>
+    <li><span class="tag">1718</span> 条自动化测试（开发层面的护栏，不是对你的抓包做了 1718 项检查）</li>
+    <li><span class="tag">91</span> 份真实抓包做回归，不是只在自己造的样本上跑</li>
+    <li><span class="tag">33</span> 条规则，每条都有参考依据（RFC / MDN / OWASP）</li>
+    <li>三条独立审查线（黑盒 / 真实样本 / 红队）各自签字，结项文档写清每轮覆盖到哪个提交</li>
+  </ul>
+  <p class="fine">红队那条线一共拦下 6 次错误，其中 5 次拦的是「看起来全绿但其实没验到」——这段写在项目的复盘里，也是这份报告敢给人复核的原因。</p>
+
+  <h2>怎么开始</h2>
+  <p>发我两样东西：<strong>一个 <code>.har</code> 文件</strong>，以及<strong>你希望优先保护什么</strong>（登录态？客户资料？支付页？）。第二样决定我把哪几条排在最前面讲。</p>
+  <div class="cta">
+    <a class="btn primary" href="./样例交付件.pdf" target="_blank" rel="noopener">先看样例</a>
+    <a class="btn ghost" href="mailto:gzx13935434104@outlook.com">邮件联系</a>
+  </div>
+
+  <footer>
+    本服务只做响应头配置体检，不做渗透测试，不承诺「改完即安全」，也不承诺「没有漏报」。<br>
+    覆盖范围与已知局限随每份报告一并交付。
+  </footer>
+</div>
+</body>
+</html>
